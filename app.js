@@ -31,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/content", require("./routes/contentRoutes"));
 app.use("/api/genres", require("./routes/genreRoutes"));
 app.use("/api/episodes", require("./routes/episodeRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
 // app.use('/api/profiles', require('./routes/profileRoutes'));
 
 // Error handling middleware
