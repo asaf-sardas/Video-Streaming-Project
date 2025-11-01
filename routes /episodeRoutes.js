@@ -5,13 +5,13 @@ const episodeController = require("../controllers/episodeController");
 // נתיבים בסיסיים לפרקים
 router
   .route("/")
-  .get(episodeController.getAllEpisodes)  // קבלת כל הפרקים (עם אפשרות לסינון)
+  .get(episodeController.getAllEpisodes) // קבלת כל הפרקים (עם אפשרות לסינון)
   .post(episodeController.createEpisode); // יצירת פרק חדש
 
 router
   .route("/:id")
-  .get(episodeController.getEpisodeById)  // קבלת פרק ספציפי לפי ID
-  .put(episodeController.updateEpisode)   // עדכון פרק
+  .get(episodeController.getEpisodeById) // קבלת פרק ספציפי לפי ID
+  .put(episodeController.updateEpisode) // עדכון פרק
   .delete(episodeController.deleteEpisode); // מחיקת פרק
 
 // עדכון מספר צפיות בפרק
