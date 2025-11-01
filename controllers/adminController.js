@@ -1,9 +1,20 @@
 const Content = require("../models/content");
 const mongoose = require("mongoose");
+const imdb = require("imdb-api");
+const configs = require("../config/config");
 
 exports.createContent = async (req, res) => {
   try {
-    const content = await Content.create(req.body);
+    const imdbReview = await imdb.get(
+      { name: req.body.title },
+      { apiKey: process.env.IMDB_API_KEY, timeout: configs.IMDB_TIMEOUT }
+    );
+    const data = {
+      rating: parseFloat(imdbReview.ratings[0].value),
+      ...req.body,
+    };
+
+    const content = await Content.create(data);
     res.status(201).json({ success: true, data: content });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });

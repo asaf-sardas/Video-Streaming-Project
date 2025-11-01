@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const sumPopularityByGenre = require("../controllers/statisticsController");
+const statisticsController = require("../controllers/statisticsController");
 
 // Basic genre routes
-router.route("/").get(sumPopularityByGenre.sumPopularityByGenre); // Get all genres popularties
+router.route("/genre").get(statisticsController.sumPopularityByGenre); // Get all genres popularties
 
 module.exports = router;
