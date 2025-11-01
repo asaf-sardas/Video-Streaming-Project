@@ -16,7 +16,11 @@ app.use(express.static("public"));
 
 // Database connection
 mongoose
+<<<<<<< HEAD
   .connect(`${process.env.DB_URL}`)
+=======
+  .connect(process.env.DB_URL)
+>>>>>>> 38dd6bd14b529c2e9e1a12aa772f91a3efdeb983
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
