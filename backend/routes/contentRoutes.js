@@ -2,26 +2,26 @@ const express = require("express");
 const router = express.Router();
 const contentController = require("../controllers/contentController");
 
-// נתיבים בסיסיים לתוכן
+// Basic content routes
 router
   .route("/")
-  .get(contentController.getAllContent) // קבלת כל התכנים
-  .post(contentController.createContent); // יצירת תוכן חדש
+  .get(contentController.getAllContent) // Get all content
+  .post(contentController.createContent); // Create new content
 
-// נתיבים ספציפיים לתוכן מסוים
+// Routes for specific content
 router
   .route("/:id")
-  .get(contentController.getContentById) // קבלת תוכן ספציפי לפי ID
-  .put(contentController.updateContent) // עדכון תוכן
-  .delete(contentController.deleteContent); // מחיקת תוכן
+  .get(contentController.getContentById) // Get specific content by ID
+  .put(contentController.updateContent) // Update content
+  .delete(contentController.deleteContent); // Delete content
 
-// עדכון צפיות ולייקים
-router.put("/:id/views", contentController.updateViews); // הגדלת מספר צפיות
-router.put("/:id/likes", contentController.toggleLike); // הוספה/הסרת לייק
+// View count and likes update
+router.put("/:id/views", contentController.updateViews); // Increment view count
+router.put("/:id/likes", contentController.toggleLike); // Add/remove like
 
-// נתיבים לקבלת תכנים לפי קטגוריות
-router.get("/popular/all", contentController.getPopularContent); // תכנים פופולריים
-router.get("/newest/genre/:genreId", contentController.getNewestByGenre); // תכנים חדשים לפי ז'אנר
-router.post("/recommendations", contentController.getRecommendations); // המלצות תוכן מותאמות אישית
+// Routes for content by categories
+router.get("/popular/all", contentController.getPopularContent); // Popular content
+router.get("/newest/genre/:genreId", contentController.getNewestByGenre); // Newest content by genre
+router.post("/recommendations", contentController.getRecommendations); // Personalized content recommendations
 
 module.exports = router;

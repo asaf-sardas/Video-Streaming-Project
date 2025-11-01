@@ -1,27 +1,27 @@
 const Content = require("../models/content");
 const mongoose = require("mongoose");
 
-// קבלת כל התכנים עם אפשרות לסינון, מיון ודפדוף
+// Get all content with filtering, sorting and pagination options
 exports.getAllContent = async (req, res) => {
   try {
     const filter = {};
 
-    // מאפשר סינון לפי סוג תוכן (סרט/סדרה)
+    // Filter by content type (movie/series)
     if (req.query.type) {
       filter.type = req.query.type;
     }
 
-    // מאפשר חיפוש טקסטואלי
+    // Enable text search
     if (req.query.search) {
       filter.$text = { $search: req.query.search };
     }
 
-    // סינון לפי שנה
+    // Filter by year
     if (req.query.year) {
       filter.releaseYear = parseInt(req.query.year);
     }
 
-    // טווח שנים
+    // Year range filter
     if (req.query.yearFrom && req.query.yearTo) {
       filter.releaseYear = {
         $gte: parseInt(req.query.yearFrom),
@@ -33,60 +33,60 @@ exports.getAllContent = async (req, res) => {
       filter.releaseYear = { $lte: parseInt(req.query.yearTo) };
     }
 
-    // סינון לפי ז'אנר (לפי ID)
+    // Filter by genre (by ID)
     if (req.query.genre) {
       filter.genres = req.query.genre;
     }
 
-    // סינון לפי דירוג מינימלי
+    // Filter by minimum rating
     if (req.query.minRating) {
       filter.rating = { $gte: parseFloat(req.query.minRating) };
     }
 
-    // אפשרויות מיון
-    let sortOptions = { createdAt: -1 }; // ברירת מחדל - מהחדש לישן
+    // Sorting options
+    let sortOptions = { createdAt: -1 }; // Default - newest to oldest
     if (req.query.sort) {
       switch (req.query.sort) {
         case "title":
-          sortOptions = { title: 1 }; // מיון לפי כותרת (A-Z)
+          sortOptions = { title: 1 }; // Sort by title (A-Z)
           break;
         case "title_desc":
-          sortOptions = { title: -1 }; // מיון לפי כותרת (Z-A)
+          sortOptions = { title: -1 }; // Sort by title (Z-A)
           break;
         case "year":
-          sortOptions = { releaseYear: 1 }; // מישן לחדש
+          sortOptions = { releaseYear: 1 }; // From oldest to newest
           break;
         case "year_desc":
-          sortOptions = { releaseYear: -1 }; // מחדש לישן
+          sortOptions = { releaseYear: -1 }; // From newest to oldest
           break;
         case "rating":
-          sortOptions = { rating: -1 }; // מדירוג גבוה לנמוך
+          sortOptions = { rating: -1 }; // From high to low rating
           break;
         case "popularity":
-          sortOptions = { views: -1, likes: -1 }; // לפי פופולריות
+          sortOptions = { views: -1, likes: -1 }; // By popularity
           break;
       }
     }
 
-    // דפדוף (pagination)
+    // Pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // בניית השאילתה
+    // Build the query
     const contentQuery = Content.find(filter)
       .populate("genres", "name")
       .sort(sortOptions)
       .skip(skip)
       .limit(limit);
 
-    // הרצת השאילתה
+    // Execute the query
     const contents = await contentQuery;
 
-    // ספירת סך התוצאות (ללא דפדוף)
+    // Count total results (without pagination)
     const total = await Content.countDocuments(filter);
 
-    // חישוב מספר העמודים
+    // Calculate total pages
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -107,7 +107,7 @@ exports.getAllContent = async (req, res) => {
   }
 };
 
-// קבלת תוכן בודד לפי ID
+// Get single content by ID
 exports.getContentById = async (req, res) => {
   try {
     const content = await Content.findById(req.params.id).populate(
@@ -121,7 +121,7 @@ exports.getContentById = async (req, res) => {
         .json({ success: false, error: "Content not found" });
     }
 
-    // אם זו סדרה, צריך להביא גם את הפרקים שלה
+    // If it's a series, also fetch its episodes
     if (content.type === "series") {
       await content.populate("episodes");
     }
@@ -132,7 +132,7 @@ exports.getContentById = async (req, res) => {
   }
 };
 
-// יצירת תוכן חדש
+// Create new content
 exports.createContent = async (req, res) => {
   try {
     const content = await Content.create(req.body);
@@ -142,7 +142,7 @@ exports.createContent = async (req, res) => {
   }
 };
 
-// עדכון תוכן קיים
+// Update existing content
 exports.updateContent = async (req, res) => {
   try {
     const content = await Content.findByIdAndUpdate(req.params.id, req.body, {
@@ -162,7 +162,7 @@ exports.updateContent = async (req, res) => {
   }
 };
 
-// מחיקת תוכן
+// Delete content
 exports.deleteContent = async (req, res) => {
   try {
     const content = await Content.findByIdAndDelete(req.params.id);
@@ -179,7 +179,7 @@ exports.deleteContent = async (req, res) => {
   }
 };
 
-// עדכון מספר הצפיות בתוכן
+// Update content view count
 exports.updateViews = async (req, res) => {
   try {
     const content = await Content.findById(req.params.id);
@@ -190,7 +190,7 @@ exports.updateViews = async (req, res) => {
         .json({ success: false, error: "Content not found" });
     }
 
-    // הגדלת מספר הצפיות ב-1
+    // Increase view count by 1
     content.views += 1;
     await content.save();
 
@@ -204,7 +204,7 @@ exports.updateViews = async (req, res) => {
   }
 };
 
-// הוספה או הסרת לייק
+// Add or remove like
 exports.toggleLike = async (req, res) => {
   try {
     const content = await Content.findById(req.params.id);
@@ -215,13 +215,13 @@ exports.toggleLike = async (req, res) => {
         .json({ success: false, error: "Content not found" });
     }
 
-    // בדיקה אם התוכן קיבל לייק או שצריך להסיר את הלייק
+    // Check if content should be liked or unliked
     const { action } = req.body;
 
     if (action === "like") {
       content.likes += 1;
     } else if (action === "unlike") {
-      // וידוא שמספר הלייקים לא יורד מתחת ל-0
+      // Ensure like count doesn't go below zero
       content.likes = Math.max(0, content.likes - 1);
     } else {
       return res.status(400).json({
@@ -242,18 +242,18 @@ exports.toggleLike = async (req, res) => {
   }
 };
 
-// קבלת התכנים הפופולריים ביותר
+// Get most popular content
 exports.getPopularContent = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
 
-    // ניתן לשנות את האלגוריתם לפופולריות לפי הצורך
-    // כאן אנחנו משקללים צפיות ולייקים
+    // The popularity algorithm can be customized as needed
+    // Here we're weighing views and likes
     const contents = await Content.find()
       .populate("genres", "name")
       .sort({
-        views: -1, // קודם כל לפי צפיות
-        likes: -1, // אם יש שוויון בצפיות, אז לפי לייקים
+        views: -1, // First by views
+        likes: -1, // Then by likes if views are equal
       })
       .limit(limit);
 
@@ -267,7 +267,7 @@ exports.getPopularContent = async (req, res) => {
   }
 };
 
-// קבלת התכנים החדשים ביותר לפי ז'אנר
+// Get newest content by genre
 exports.getNewestByGenre = async (req, res) => {
   try {
     const genreId = req.params.genreId;
