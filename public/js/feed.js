@@ -1,6 +1,9 @@
 // API Configuration
 const API_BASE_URL = "http://localhost:3000/api";
 
+// Global state - liked content from localStorage
+let likedContent = JSON.parse(localStorage.getItem("likedContent")) || {};
+
 // API Functions - לשימוש עתידי
 async function fetchAllContent(searchTerm = "", sortBy = "") {
   try {
@@ -61,7 +64,7 @@ async function fetchMovies(searchTerm = "", sortBy = "") {
 
 async function fetchPopularContent() {
   try {
-    const response = await fetch(`${API_BASE_URL}/content/popular`);
+    const response = await fetch(`${API_BASE_URL}/content/popular/all`);
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
     return data.data || [];
@@ -103,7 +106,7 @@ async function fetchContentByGenre(genreId) {
 async function fetchNewestByGenre(genreId) {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/content/newest-by-genre/${genreId}`
+      `${API_BASE_URL}/content/newest/genre/${genreId}`
     );
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
@@ -225,12 +228,30 @@ function displayContentInRow(rowElement, contentArray) {
 }
 
 // Display home page with horizontal sections
+// Flag to prevent multiple simultaneous calls
+let isLoadingHomeSections = false;
+
 async function displayHomeSections() {
+  // Prevent multiple simultaneous calls
+  if (isLoadingHomeSections) {
+    console.log("Already loading home sections, skipping...");
+    return;
+  }
+
+  isLoadingHomeSections = true;
+
   try {
+    // Clear genre sections container first to prevent duplicates
+    const genreSectionsContainer = document.getElementById("genreSections");
+    if (genreSectionsContainer) {
+      genreSectionsContainer.innerHTML = "";
+    }
+
     // Load Popular Now section
     const popularContent = await fetchPopularContent();
     const popularRow = document.getElementById("popularRow");
     if (popularRow && popularContent.length > 0) {
+      popularRow.innerHTML = ""; // Clear existing content
       displayContentInRow(popularRow, popularContent);
     }
 
@@ -238,42 +259,156 @@ async function displayHomeSections() {
     const newestContent = await fetchNewestContent();
     const newReleasesRow = document.getElementById("newReleasesRow");
     if (newReleasesRow && newestContent.length > 0) {
+      newReleasesRow.innerHTML = ""; // Clear existing content
       displayContentInRow(newReleasesRow, newestContent);
     }
 
     // Load genres and create dynamic genre sections
-    const genresResponse = await fetch(`${API_BASE_URL}/genres`);
-    if (genresResponse.ok) {
+    if (!genreSectionsContainer) {
+      console.error("genreSections container not found!");
+      isLoadingHomeSections = false;
+      return;
+    }
+
+    try {
+      const genresResponse = await fetch(`${API_BASE_URL}/genres`);
+      console.log(
+        "Genres API Response:",
+        genresResponse.status,
+        genresResponse.statusText
+      );
+
+      if (!genresResponse.ok) {
+        console.error(
+          "Failed to fetch genres:",
+          genresResponse.status,
+          genresResponse.statusText
+        );
+        genreSectionsContainer.innerHTML = `
+          <div class="error-message" style="padding: 20px; color: #aaa; text-align: center;">
+            Failed to load genres. Please try again later.
+          </div>
+        `;
+        return;
+      }
+
       const genresData = await genresResponse.json();
+      console.log("Genres Data:", genresData);
       const genres = genresData.data || [];
 
-      const genreSectionsContainer = document.getElementById("genreSections");
+      if (genres.length === 0) {
+        console.warn("No genres found in API response");
+        genreSectionsContainer.innerHTML = `
+          <div class="error-message" style="padding: 20px; color: #aaa; text-align: center;">
+            No genres available.
+          </div>
+        `;
+        return;
+      }
+
       genreSectionsContainer.innerHTML = "";
+      let sectionsCreated = 0;
 
       // Create a section for each genre
       for (const genre of genres) {
-        if (!genre.isActive) continue;
+        if (!genre.isActive) {
+          console.log(`Skipping inactive genre: ${genre.name}`);
+          continue;
+        }
 
-        const newestByGenre = await fetchNewestByGenre(genre._id);
-        if (newestByGenre && newestByGenre.length > 0) {
+        console.log(
+          `Loading content for genre: ${genre.name} (ID: ${genre._id})`
+        );
+
+        try {
+          const newestByGenre = await fetchNewestByGenre(genre._id);
+          console.log(
+            `Content for ${genre.name}:`,
+            newestByGenre?.length || 0,
+            "items"
+          );
+
+          // Even if there's no content, show the genre section so users can click on it
+          // Convert genre ID to string to ensure proper URL encoding
+          const genreId = String(genre._id);
+
           const section = document.createElement("section");
           section.className = "content-section";
-          section.innerHTML = `
-            <h2 class="section-title">${genre.name}</h2>
-            <div class="horizontal-scroll">
-              <div class="content-row" data-genre-id="${genre._id}"></div>
-            </div>
-          `;
 
-          const row = section.querySelector(".content-row");
-          displayContentInRow(row, newestByGenre);
+          if (newestByGenre && newestByGenre.length > 0) {
+            section.innerHTML = `
+              <div class="section-header">
+                <h2 class="section-title genre-link" data-genre-id="${genreId}" style="cursor: pointer;" title="Click to view all ${genre.name} content">
+                  ${genre.name}
+                </h2>
+                <a href="./genre.html?id=${genreId}" class="view-all-link" title="View all ${genre.name} content">View All →</a>
+              </div>
+              <div class="horizontal-scroll">
+                <div class="content-row" data-genre-id="${genreId}"></div>
+              </div>
+            `;
+
+            const row = section.querySelector(".content-row");
+            displayContentInRow(row, newestByGenre);
+          } else {
+            // Show genre section even if no content (so users can click to see genre page)
+            section.innerHTML = `
+              <div class="section-header">
+                <h2 class="section-title genre-link" data-genre-id="${genreId}" style="cursor: pointer;" title="Click to view all ${genre.name} content">
+                  ${genre.name}
+                </h2>
+                <a href="./genre.html?id=${genreId}" class="view-all-link" title="View all ${genre.name} content">View All →</a>
+              </div>
+              <div class="horizontal-scroll">
+                <div class="content-row" data-genre-id="${genreId}">
+                  <p style="color: #aaa; padding: 20px;">No content available yet.</p>
+                </div>
+              </div>
+            `;
+          }
+
+          // Add click handler to genre title
+          const genreLink = section.querySelector(".genre-link");
+          if (genreLink) {
+            genreLink.addEventListener("click", (e) => {
+              e.preventDefault();
+              window.location.href = `./genre.html?id=${genreId}`;
+            });
+          }
 
           genreSectionsContainer.appendChild(section);
+          sectionsCreated++;
+        } catch (genreError) {
+          console.error(
+            `Error loading content for genre ${genre.name}:`,
+            genreError
+          );
         }
+      }
+
+      console.log(`Created ${sectionsCreated} genre sections`);
+
+      if (sectionsCreated === 0) {
+        genreSectionsContainer.innerHTML = `
+          <div class="error-message" style="padding: 20px; color: #aaa; text-align: center;">
+            No genre sections available. Please try again later.
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error("Error fetching genres:", error);
+      if (genreSectionsContainer) {
+        genreSectionsContainer.innerHTML = `
+          <div class="error-message" style="padding: 20px; color: #aaa; text-align: center;">
+            Error loading genres. Please check your connection and try again.
+          </div>
+        `;
       }
     }
   } catch (error) {
     console.error("Error displaying home sections:", error);
+  } finally {
+    isLoadingHomeSections = false;
   }
 }
 
@@ -758,8 +893,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("searchInput");
   const sortSelect = document.getElementById("sortSelect");
 
-  // Get liked content from localStorage
-  let likedContent = JSON.parse(localStorage.getItem("likedContent")) || {};
+  // Reload liked content from localStorage (already defined globally, but refresh it)
+  likedContent = JSON.parse(localStorage.getItem("likedContent")) || {};
 
   // Show home content initially
   displayContent("home");
