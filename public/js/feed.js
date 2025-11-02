@@ -71,6 +71,49 @@ async function fetchPopularContent() {
   }
 }
 
+// Fetch newest content
+async function fetchNewestContent() {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/content?sort=releaseYear:-1&limit=20`
+    );
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error("Error fetching newest content:", error);
+    return [];
+  }
+}
+
+// Fetch content by genre
+async function fetchContentByGenre(genreId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/genres/${genreId}/content`);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error("Error fetching content by genre:", error);
+    return [];
+  }
+}
+
+// Fetch newest content by genre
+async function fetchNewestByGenre(genreId) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/content/newest-by-genre/${genreId}`
+    );
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error("Error fetching newest content by genre:", error);
+    return [];
+  }
+}
+
 async function updateLike(contentId, isLiked) {
   try {
     const response = await fetch(`${API_BASE_URL}/content/${contentId}/like`, {
@@ -85,6 +128,152 @@ async function updateLike(contentId, isLiked) {
   } catch (error) {
     console.error("Error updating like status:", error);
     return null;
+  }
+}
+
+// Create a content card for horizontal row
+function createHorizontalCard(item) {
+  const card = document.createElement("div");
+  card.className = "content-card";
+
+  // Get image URL and fix path if needed
+  let imageUrl = item.imageUrl || "./posters/placeholder.jpg";
+  if (imageUrl.startsWith("/assets/posters/")) {
+    imageUrl = imageUrl.replace("/assets/posters/", "./posters/");
+  }
+
+  // Check if the item is liked
+  const itemId = item._id;
+  const isLiked = likedContent[itemId];
+  const heartIcon = isLiked ? "❤️" : "🤍";
+
+  card.innerHTML = `
+    <div class="content-poster">
+      <img src="${imageUrl}" alt="${
+    item.title
+  }" onerror="this.src='./Images/placeholder.jpg'">
+    </div>
+    <div class="content-info">
+      <h3 class="content-title">${item.title}</h3>
+      <div class="content-metadata">
+        <span class="content-year">${item.releaseYear || "Unknown"}</span>
+        <span class="content-rating">★ ${item.rating || "N/A"}</span>
+      </div>
+      <div class="content-stats">
+        <button class="like-button ${
+          isLiked ? "liked" : ""
+        }" data-id="${itemId}">
+          <span class="heart">${heartIcon}</span>
+          <span class="like-count">${item.likes || 0}</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Make the card clickable
+  card.addEventListener("click", (e) => {
+    if (e.target.closest(".like-button")) return;
+    window.location.href = `./content-detail.html?id=${itemId}`;
+  });
+
+  // Add like button functionality
+  const likeButton = card.querySelector(".like-button");
+  likeButton.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const isCurrentlyLiked = likedContent[itemId];
+    const newLikedState = !isCurrentlyLiked;
+
+    // Optimistic UI update
+    if (newLikedState) {
+      likedContent[itemId] = true;
+      likeButton.classList.add("liked");
+      likeButton.querySelector(".heart").textContent = "❤️";
+      likeButton.querySelector(".like-count").textContent =
+        (parseInt(likeButton.querySelector(".like-count").textContent) || 0) +
+        1;
+    } else {
+      delete likedContent[itemId];
+      likeButton.classList.remove("liked");
+      likeButton.querySelector(".heart").textContent = "🤍";
+      likeButton.querySelector(".like-count").textContent = Math.max(
+        0,
+        (parseInt(likeButton.querySelector(".like-count").textContent) || 0) - 1
+      );
+    }
+
+    localStorage.setItem("likedContent", JSON.stringify(likedContent));
+
+    // Update on server
+    try {
+      await updateLike(itemId, newLikedState);
+    } catch (error) {
+      console.error("Failed to update like status:", error);
+    }
+  });
+
+  return card;
+}
+
+// Display content in horizontal row
+function displayContentInRow(rowElement, contentArray) {
+  rowElement.innerHTML = "";
+  contentArray.forEach((item) => {
+    const card = createHorizontalCard(item);
+    rowElement.appendChild(card);
+  });
+}
+
+// Display home page with horizontal sections
+async function displayHomeSections() {
+  try {
+    // Load Popular Now section
+    const popularContent = await fetchPopularContent();
+    const popularRow = document.getElementById("popularRow");
+    if (popularRow && popularContent.length > 0) {
+      displayContentInRow(popularRow, popularContent);
+    }
+
+    // Load New Releases section
+    const newestContent = await fetchNewestContent();
+    const newReleasesRow = document.getElementById("newReleasesRow");
+    if (newReleasesRow && newestContent.length > 0) {
+      displayContentInRow(newReleasesRow, newestContent);
+    }
+
+    // Load genres and create dynamic genre sections
+    const genresResponse = await fetch(`${API_BASE_URL}/genres`);
+    if (genresResponse.ok) {
+      const genresData = await genresResponse.json();
+      const genres = genresData.data || [];
+
+      const genreSectionsContainer = document.getElementById("genreSections");
+      genreSectionsContainer.innerHTML = "";
+
+      // Create a section for each genre
+      for (const genre of genres) {
+        if (!genre.isActive) continue;
+
+        const newestByGenre = await fetchNewestByGenre(genre._id);
+        if (newestByGenre && newestByGenre.length > 0) {
+          const section = document.createElement("section");
+          section.className = "content-section";
+          section.innerHTML = `
+            <h2 class="section-title">${genre.name}</h2>
+            <div class="horizontal-scroll">
+              <div class="content-row" data-genre-id="${genre._id}"></div>
+            </div>
+          `;
+
+          const row = section.querySelector(".content-row");
+          displayContentInRow(row, newestByGenre);
+
+          genreSectionsContainer.appendChild(section);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error displaying home sections:", error);
   }
 }
 
@@ -386,6 +575,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById(category);
     if (container) {
       container.style.display = "block";
+
+      // Special handling for home page - display horizontal sections
+      if (category === "home") {
+        await displayHomeSections();
+        return;
+      }
+
       const grid = container.querySelector(".content-grid");
       grid.innerHTML = ""; // Clear existing content
 

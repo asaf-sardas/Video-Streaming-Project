@@ -151,8 +151,24 @@
 
       <!-- Home Container -->
       <div class="category-container" id="home">
-        <h2 class="category-title">All Content</h2>
-        <div class="content-grid" id="homeGrid"></div>
+        <!-- Popular Now Section -->
+        <section class="content-section">
+          <h2 class="section-title">Popular Now</h2>
+          <div class="horizontal-scroll" id="popularSection">
+            <div class="content-row" id="popularRow"></div>
+          </div>
+        </section>
+
+        <!-- New Releases Section -->
+        <section class="content-section">
+          <h2 class="section-title">New Releases</h2>
+          <div class="horizontal-scroll" id="newReleasesSection">
+            <div class="content-row" id="newReleasesRow"></div>
+          </div>
+        </section>
+
+        <!-- Genre Sections will be added dynamically -->
+        <div id="genreSections"></div>
       </div>
     </div>
 
