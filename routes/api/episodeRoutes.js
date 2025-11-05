@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const episodeController = require("../controllers/episodeController");
+const episodeController = require("../../controllers/episodeController");
 
 // נתיבים בסיסיים לפרקים
 router
