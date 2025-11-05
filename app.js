@@ -26,19 +26,21 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// Root route will be handled by viewRoutes (redirects to /feed)
-
 // Import API routes
-app.use("/api/content", require("./routes/contentRoutes"));
-app.use("/api/genres", require("./routes/genreRoutes"));
-app.use("/api/episodes", require("./routes/episodeRoutes"));
-app.use("/api/admin", require("./routes/adminRoutes"));
-app.use("/api/stats", require("./routes/statisticsRoutes"));
+app.use("/api/content", require("./routes/api/contentRoutes"));
+app.use("/api/genres", require("./routes/api/genreRoutes"));
+app.use("/api/episodes", require("./routes/api/episodeRoutes"));
+app.use("/api/admin", require("./routes/api/adminRoutes"));
+app.use("/api/stats", require("./routes/api/statisticsRoutes"));
 // app.use('/api/profiles', require('./routes/profileRoutes'));
 
 // Import view routes (EJS pages)
-app.use("/", require("./routes/viewRoutes"));
-
+app.use("/", require("./routes/views/feed"));
+app.use("/feed", require("./routes/views/feed"));
+app.use("/profiles", require("./routes/views/profiles"));
+app.use("/login", require("./routes/views/login"));
+app.use("/genre", require("./routes/views/genre"));
+app.use("/content", require("./routes/views/content"));
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({

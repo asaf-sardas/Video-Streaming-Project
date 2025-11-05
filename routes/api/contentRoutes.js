@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const contentController = require("../controllers/contentController");
+const contentController = require("../../controllers/contentController");
 
 // Basic content routes
 router.route("/").get(contentController.getAllContent); // Get all content
