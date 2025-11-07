@@ -200,9 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     profileList.innerHTML = '';
 
+    const fragment = document.createDocumentFragment();
     profiles.forEach((profile) => {
-      profileList.appendChild(createProfileElement(profile));
+      fragment.appendChild(createProfileElement(profile));
     });
+    profileList.appendChild(fragment);
 
     if (isManaging && profiles.length < MAX_PROFILES && apiAvailable) {
       profileList.appendChild(createAddProfileElement());
@@ -226,6 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
     avatarImage.src = profile.image;
     avatarImage.alt = `${profile.name}'s profile`;
     avatarImage.className = 'profile-image';
+    avatarImage.loading = 'lazy';
+    avatarImage.width = 200;
+    avatarImage.height = 200;
 
     avatarContainer.appendChild(avatarImage);
     profileItem.appendChild(avatarContainer);
@@ -431,6 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
       img.src = image;
       img.alt = 'Avatar';
       img.className = 'img-fluid rounded';
+      img.loading = 'lazy';
 
       button.appendChild(img);
       button.addEventListener('click', () => {
