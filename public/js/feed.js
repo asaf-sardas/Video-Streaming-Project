@@ -1146,17 +1146,22 @@ document.addEventListener("click", (e) => {
 // Add click handlers for dropdown items
 document.querySelectorAll(".dropdown-item").forEach((item) => {
   item.addEventListener("click", (e) => {
-    const action = e.target.closest(".dropdown-item").textContent.trim();
+    const action = e.target.closest(".dropdown-item")?.dataset.action || 
+                   e.target.closest(".dropdown-item")?.textContent.trim();
     switch (action) {
+      case "settings":
       case "User":
-        console.log("User clicked");
+        window.location.href = "/settings";
         break;
+      case "switch-profile":
       case "Switch Profile":
         window.location.href = "/profiles";
         break;
+      case "logout":
       case "Logout":
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("currentProfile");
+        localStorage.removeItem("currentUser");
         window.location.href = "/login";
         break;
     }
