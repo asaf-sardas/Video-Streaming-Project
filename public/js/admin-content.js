@@ -1,15 +1,19 @@
 // Global variables
 let allGenres = [];
+let allSeries = [];
 let castCountCreate = 0;
 const MAX_CAST = 10;
+let currentFormType = "content"; // "content" or "episode"
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", () => {
   loadGenres();
+  loadSeries();
   setupEventListeners();
   setupCastManagement();
   setupTypeChangeHandlers();
   setupResetButton();
+  setupContentTypeToggle();
 });
 
 // Load Genres
@@ -30,6 +34,42 @@ async function loadGenres() {
       "error"
     );
   }
+}
+
+// Load Series for Episode Form
+async function loadSeries() {
+  try {
+    const response = await fetch("/api/content?type=series&limit=1000");
+    if (!response.ok) throw new Error("Failed to load series");
+
+    const data = await response.json();
+    allSeries = data.data || [];
+
+    populateSeriesDropdown();
+  } catch (error) {
+    console.error("Error loading series:", error);
+    showMessage(
+      "createMessage",
+      "Failed to load series. Please refresh the page.",
+      "error"
+    );
+  }
+}
+
+function populateSeriesDropdown() {
+  const dropdown = document.getElementById("episode_series");
+  if (!dropdown) return;
+
+  // Clear existing options except the first one
+  dropdown.innerHTML = '<option value="">Select a series...</option>';
+
+  // Add series options
+  allSeries.forEach((series) => {
+    const option = document.createElement("option");
+    option.value = series._id;
+    option.textContent = `${series.title} (${series.releaseYear})`;
+    dropdown.appendChild(option);
+  });
 }
 
 function populateGenreSelects() {
@@ -192,6 +232,14 @@ function resetForm() {
     toggleDurationField("create", typeSelect.value);
   }
 
+  // Reset episode form fields if visible
+  if (currentFormType === "episode") {
+    const episodeSeries = document.getElementById("episode_series");
+    if (episodeSeries) {
+      episodeSeries.value = "";
+    }
+  }
+
   // Clear messages
   clearMessages();
 }
@@ -207,6 +255,75 @@ function toggleDurationField(formType, type) {
   } else {
     durationGroup.style.display = "block";
   }
+}
+
+// Content Type Toggle (Series vs Episode)
+function setupContentTypeToggle() {
+  const seriesBtn = document.getElementById("contentTypeSeries");
+  const episodeBtn = document.getElementById("contentTypeEpisode");
+
+  if (seriesBtn && episodeBtn) {
+    seriesBtn.addEventListener("click", () => switchToContentForm());
+    episodeBtn.addEventListener("click", () => switchToEpisodeForm());
+  }
+}
+
+function switchToContentForm() {
+  currentFormType = "content";
+  
+  // Update button states
+  document.getElementById("contentTypeSeries").classList.add("active");
+  document.getElementById("contentTypeEpisode").classList.remove("active");
+  
+  // Update section title
+  document.getElementById("sectionTitle").textContent = "Create New Content";
+  
+  // Show/hide form sections
+  document.getElementById("contentFormSections").style.display = "block";
+  document.getElementById("episodeFormSection").style.display = "none";
+  
+  // Update submit button text
+  document.getElementById("submitBtnText").textContent = "Create Content";
+  
+  // Make episode fields not required
+  const episodeFields = document.querySelectorAll("#episodeFormSection [required]");
+  episodeFields.forEach(field => field.removeAttribute("required"));
+  
+  // Make content fields required again
+  const contentFields = document.querySelectorAll("#contentFormSections [required]");
+  contentFields.forEach(field => field.setAttribute("required", "required"));
+  
+  // Reset form
+  resetForm();
+}
+
+function switchToEpisodeForm() {
+  currentFormType = "episode";
+  
+  // Update button states
+  document.getElementById("contentTypeSeries").classList.remove("active");
+  document.getElementById("contentTypeEpisode").classList.add("active");
+  
+  // Update section title
+  document.getElementById("sectionTitle").textContent = "Create New Episode";
+  
+  // Show/hide form sections
+  document.getElementById("contentFormSections").style.display = "none";
+  document.getElementById("episodeFormSection").style.display = "block";
+  
+  // Update submit button text
+  document.getElementById("submitBtnText").textContent = "Create Episode";
+  
+  // Make content fields not required
+  const contentFields = document.querySelectorAll("#contentFormSections [required]");
+  contentFields.forEach(field => field.removeAttribute("required"));
+  
+  // Make episode fields required
+  const episodeFields = document.querySelectorAll("#episodeFormSection [required]");
+  episodeFields.forEach(field => field.setAttribute("required", "required"));
+  
+  // Reset form
+  resetForm();
 }
 
 // Event Listeners
@@ -229,17 +346,9 @@ function setupEventListeners() {
   });
 }
 
-// Create Content
+// Create Content or Episode
 async function handleCreateSubmit(e) {
   e.preventDefault();
-
-  const formData = collectFormData("create");
-
-  // Validate genres
-  if (!formData.genres || formData.genres.length === 0) {
-    showMessage("createMessage", "Please select at least one genre.", "error");
-    return;
-  }
 
   // Show loading state
   const submitBtn = document.getElementById("submitBtn");
@@ -254,7 +363,40 @@ async function handleCreateSubmit(e) {
   clearMessages();
 
   try {
-    const response = await fetch("/api/admin", {
+    let formData;
+    let apiEndpoint;
+    let validationError;
+
+    if (currentFormType === "episode") {
+      // Validate and collect episode data
+      validationError = validateEpisodeForm();
+      if (validationError) {
+        showMessage("createMessage", validationError, "error");
+        submitBtn.classList.remove("loading");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="bi bi-check-lg"></i> <span id="submitBtnText">${originalText}</span>`;
+        return;
+      }
+
+      formData = collectEpisodeFormData();
+      apiEndpoint = "/api/episodes";
+    } else {
+      // Validate and collect content data
+      formData = collectFormData("create");
+
+      // Validate genres
+      if (!formData.genres || formData.genres.length === 0) {
+        showMessage("createMessage", "Please select at least one genre.", "error");
+        submitBtn.classList.remove("loading");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="bi bi-check-lg"></i> <span id="submitBtnText">${originalText}</span>`;
+        return;
+      }
+
+      apiEndpoint = "/api/admin";
+    }
+
+    const response = await fetch(apiEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -269,20 +411,25 @@ async function handleCreateSubmit(e) {
       resetForm();
 
       // Show success modal
-      const successMessage = data.message || "Content successfully added.";
+      const successMessage = data.message || 
+        (currentFormType === "episode" 
+          ? "Episode successfully added." 
+          : "Content successfully added.");
       showSuccessModal(successMessage);
     } else {
       // Show error message
       const errorMessage =
         data.error ||
         data.message ||
-        "An error occurred while creating the content.";
+        (currentFormType === "episode"
+          ? "An error occurred while creating the episode."
+          : "An error occurred while creating the content.");
       showMessage("createMessage", errorMessage, "error");
     }
   } catch (error) {
-    console.error("Error creating content:", error);
+    console.error(`Error creating ${currentFormType}:`, error);
 
-    let errorMessage = "Unexpected error occurred while creating the content.";
+    let errorMessage = `Unexpected error occurred while creating the ${currentFormType}.`;
 
     if (error.message) {
       if (
@@ -306,6 +453,80 @@ async function handleCreateSubmit(e) {
     submitBtn.disabled = false;
     submitBtn.innerHTML = `<i class="bi bi-check-lg"></i> <span id="submitBtnText">${originalText}</span>`;
   }
+}
+
+// Validate Episode Form
+function validateEpisodeForm() {
+  const series = document.getElementById("episode_series").value;
+  const seasonNumber = document.getElementById("episode_seasonNumber").value;
+  const episodeNumber = document.getElementById("episode_episodeNumber").value;
+  const title = document.getElementById("episode_title").value.trim();
+  const description = document.getElementById("episode_description").value.trim();
+  const duration = document.getElementById("episode_duration").value;
+  const videoUrl = document.getElementById("episode_videoUrl").value.trim();
+
+  if (!series) {
+    return "Please select a parent series.";
+  }
+
+  if (!seasonNumber || parseInt(seasonNumber) < 1) {
+    return "Please enter a valid season number (minimum 1).";
+  }
+
+  if (!episodeNumber || parseInt(episodeNumber) < 1) {
+    return "Please enter a valid episode number (minimum 1).";
+  }
+
+  if (!title) {
+    return "Please enter an episode title.";
+  }
+
+  if (!description) {
+    return "Please enter an episode description.";
+  }
+
+  if (!duration || parseInt(duration) < 1) {
+    return "Please enter a valid duration in minutes (minimum 1).";
+  }
+
+  if (!videoUrl) {
+    return "Please enter a video URL.";
+  }
+
+  // Validate URL format
+  try {
+    new URL(videoUrl);
+  } catch (e) {
+    return "Please enter a valid video URL.";
+  }
+
+  return null; // No validation errors
+}
+
+// Collect Episode Form Data
+function collectEpisodeFormData() {
+  const formData = {
+    content: document.getElementById("episode_series").value,
+    seasonNumber: parseInt(document.getElementById("episode_seasonNumber").value),
+    episodeNumber: parseInt(document.getElementById("episode_episodeNumber").value),
+    title: document.getElementById("episode_title").value.trim(),
+    description: document.getElementById("episode_description").value.trim(),
+    duration: parseInt(document.getElementById("episode_duration").value),
+    videoUrl: document.getElementById("episode_videoUrl").value.trim(),
+  };
+
+  // Optional fields
+  const imageUrl = document.getElementById("episode_imageUrl").value.trim();
+  if (imageUrl) {
+    formData.imageUrl = imageUrl;
+  }
+
+  const releaseDate = document.getElementById("episode_releaseDate").value;
+  if (releaseDate) {
+    formData.releaseDate = new Date(releaseDate);
+  }
+
+  return formData;
 }
 
 // Success Modal Functions

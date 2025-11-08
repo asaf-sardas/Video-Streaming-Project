@@ -37,13 +37,33 @@
     </nav>
 
     <div class="admin-container">
+      <!-- Content Type Selector -->
+      <div class="content-type-selector">
+        <button
+          type="button"
+          id="contentTypeSeries"
+          class="content-type-btn active"
+        >
+          <i class="bi bi-film"></i> Add Series/Movie
+        </button>
+        <button
+          type="button"
+          id="contentTypeEpisode"
+          class="content-type-btn"
+        >
+          <i class="bi bi-play-circle"></i> Add Episode
+        </button>
+      </div>
+
       <!-- Create Content Section -->
       <div id="createTab" class="tab-content active">
-        <h2 class="section-title">Create New Content</h2>
+        <h2 class="section-title" id="sectionTitle">Create New Content</h2>
         <form id="createContentForm" class="content-form">
-          <!-- Basic Information -->
-          <div class="form-section">
-            <h3 class="form-section-title">Basic Information</h3>
+          <!-- Content Form Sections (for Series/Movie) -->
+          <div id="contentFormSections">
+            <!-- Basic Information -->
+            <div class="form-section">
+              <h3 class="form-section-title">Basic Information</h3>
 
             <div class="form-group">
               <label for="create_title">Title *</label>
@@ -67,6 +87,7 @@
                 >
                   <option value="movie">Movie</option>
                   <option value="series">Series</option>
+                  <option value="episode">Episode</option>
                 </select>
               </div>
 
@@ -199,6 +220,119 @@
                 name="producers"
                 class="form-control"
                 placeholder="Producer 1, Producer 2"
+              />
+            </div>
+          </div>
+          </div>
+          <!-- End Content Form Sections -->
+
+          <!-- Episode Form Fields (Hidden by default) -->
+          <div id="episodeFormSection" class="form-section" style="display: none;">
+            <h3 class="form-section-title">Episode Information</h3>
+
+            <div class="form-group">
+              <label for="episode_series">Parent Series *</label>
+              <select
+                id="episode_series"
+                name="content"
+                required
+                class="form-control"
+              >
+                <option value="">Select a series...</option>
+                <!-- Series will be populated dynamically -->
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="episode_seasonNumber">Season Number *</label>
+                <input
+                  type="number"
+                  id="episode_seasonNumber"
+                  name="seasonNumber"
+                  required
+                  class="form-control"
+                  min="1"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="episode_episodeNumber">Episode Number *</label>
+                <input
+                  type="number"
+                  id="episode_episodeNumber"
+                  name="episodeNumber"
+                  required
+                  class="form-control"
+                  min="1"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="episode_duration">Duration (minutes) *</label>
+                <input
+                  type="number"
+                  id="episode_duration"
+                  name="duration"
+                  required
+                  class="form-control"
+                  min="1"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="episode_title">Episode Title *</label>
+              <input
+                type="text"
+                id="episode_title"
+                name="title"
+                required
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="episode_description">Description *</label>
+              <textarea
+                id="episode_description"
+                name="description"
+                required
+                class="form-control"
+                rows="4"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="episode_releaseDate">Release Date</label>
+              <input
+                type="date"
+                id="episode_releaseDate"
+                name="releaseDate"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="episode_imageUrl">Image URL</label>
+              <input
+                type="url"
+                id="episode_imageUrl"
+                name="imageUrl"
+                class="form-control"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="episode_videoUrl">Video URL *</label>
+              <input
+                type="url"
+                id="episode_videoUrl"
+                name="videoUrl"
+                required
+                class="form-control"
+                placeholder="https://example.com/video.mp4"
               />
             </div>
           </div>

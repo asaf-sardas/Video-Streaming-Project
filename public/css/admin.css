@@ -12,6 +12,56 @@
   padding: 0 4%;
 }
 
+/* Content Type Selector */
+.content-type-selector {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  background-color: #1a1a1a;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.content-type-btn {
+  flex: 1;
+  padding: 15px 24px;
+  background-color: #333;
+  color: #fff;
+  border: 2px solid #444;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.content-type-btn:hover {
+  background-color: #444;
+  border-color: #666;
+  transform: translateY(-2px);
+}
+
+.content-type-btn.active {
+  background-color: #e50914;
+  border-color: #e50914;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(229, 9, 20, 0.3);
+}
+
+.content-type-btn.active:hover {
+  background-color: #f40612;
+  border-color: #f40612;
+}
+
+.content-type-btn i {
+  font-size: 1.2rem;
+}
+
 /* Removed tabs navigation - no longer needed */
 
 /* Tab Content */
