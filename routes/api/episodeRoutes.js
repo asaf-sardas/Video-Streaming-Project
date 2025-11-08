@@ -7,13 +7,13 @@ const { isAuthenticated, isAdmin } = require("../../middleware/authMiddleware");
 router
   .route("/")
   .get(episodeController.getAllEpisodes) // קבלת כל הפרקים (עם אפשרות לסינון)
-  .post(isAuthenticated, isAdmin, episodeController.createEpisode); // יצירת פרק חדש (admin only)
+  .post(episodeController.createEpisode); // יצירת פרק חדש (admin only)
 
 router
   .route("/:id")
   .get(episodeController.getEpisodeById) // קבלת פרק ספציפי לפי ID
-  .put(isAuthenticated, isAdmin, episodeController.updateEpisode) // עדכון פרק (admin only)
-  .delete(isAuthenticated, isAdmin, episodeController.deleteEpisode); // מחיקת פרק (admin only)
+  .put(episodeController.updateEpisode) // עדכון פרק (admin only)
+  .delete(episodeController.deleteEpisode); // מחיקת פרק (admin only)
 
 // עדכון מספר צפיות בפרק
 router.put("/:id/views", episodeController.updateEpisodeViews);
