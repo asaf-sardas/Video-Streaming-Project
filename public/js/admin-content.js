@@ -270,58 +270,66 @@ function setupContentTypeToggle() {
 
 function switchToContentForm() {
   currentFormType = "content";
-  
+
   // Update button states
   document.getElementById("contentTypeSeries").classList.add("active");
   document.getElementById("contentTypeEpisode").classList.remove("active");
-  
+
   // Update section title
   document.getElementById("sectionTitle").textContent = "Create New Content";
-  
+
   // Show/hide form sections
   document.getElementById("contentFormSections").style.display = "block";
   document.getElementById("episodeFormSection").style.display = "none";
-  
+
   // Update submit button text
   document.getElementById("submitBtnText").textContent = "Create Content";
-  
+
   // Make episode fields not required
-  const episodeFields = document.querySelectorAll("#episodeFormSection [required]");
-  episodeFields.forEach(field => field.removeAttribute("required"));
-  
+  const episodeFields = document.querySelectorAll(
+    "#episodeFormSection [required]"
+  );
+  episodeFields.forEach((field) => field.removeAttribute("required"));
+
   // Make content fields required again
-  const contentFields = document.querySelectorAll("#contentFormSections [required]");
-  contentFields.forEach(field => field.setAttribute("required", "required"));
-  
+  const contentFields = document.querySelectorAll(
+    "#contentFormSections [required]"
+  );
+  contentFields.forEach((field) => field.setAttribute("required", "required"));
+
   // Reset form
   resetForm();
 }
 
 function switchToEpisodeForm() {
   currentFormType = "episode";
-  
+
   // Update button states
   document.getElementById("contentTypeSeries").classList.remove("active");
   document.getElementById("contentTypeEpisode").classList.add("active");
-  
+
   // Update section title
   document.getElementById("sectionTitle").textContent = "Create New Episode";
-  
+
   // Show/hide form sections
   document.getElementById("contentFormSections").style.display = "none";
   document.getElementById("episodeFormSection").style.display = "block";
-  
+
   // Update submit button text
   document.getElementById("submitBtnText").textContent = "Create Episode";
-  
+
   // Make content fields not required
-  const contentFields = document.querySelectorAll("#contentFormSections [required]");
-  contentFields.forEach(field => field.removeAttribute("required"));
-  
+  const contentFields = document.querySelectorAll(
+    "#contentFormSections [required]"
+  );
+  contentFields.forEach((field) => field.removeAttribute("required"));
+
   // Make episode fields required
-  const episodeFields = document.querySelectorAll("#episodeFormSection [required]");
-  episodeFields.forEach(field => field.setAttribute("required", "required"));
-  
+  const episodeFields = document.querySelectorAll(
+    "#episodeFormSection [required]"
+  );
+  episodeFields.forEach((field) => field.setAttribute("required", "required"));
+
   // Reset form
   resetForm();
 }
@@ -386,7 +394,11 @@ async function handleCreateSubmit(e) {
 
       // Validate genres
       if (!formData.genres || formData.genres.length === 0) {
-        showMessage("createMessage", "Please select at least one genre.", "error");
+        showMessage(
+          "createMessage",
+          "Please select at least one genre.",
+          "error"
+        );
         submitBtn.classList.remove("loading");
         submitBtn.disabled = false;
         submitBtn.innerHTML = `<i class="bi bi-check-lg"></i> <span id="submitBtnText">${originalText}</span>`;
@@ -411,9 +423,10 @@ async function handleCreateSubmit(e) {
       resetForm();
 
       // Show success modal
-      const successMessage = data.message || 
-        (currentFormType === "episode" 
-          ? "Episode successfully added." 
+      const successMessage =
+        data.message ||
+        (currentFormType === "episode"
+          ? "Episode successfully added."
           : "Content successfully added.");
       showSuccessModal(successMessage);
     } else {
@@ -461,7 +474,9 @@ function validateEpisodeForm() {
   const seasonNumber = document.getElementById("episode_seasonNumber").value;
   const episodeNumber = document.getElementById("episode_episodeNumber").value;
   const title = document.getElementById("episode_title").value.trim();
-  const description = document.getElementById("episode_description").value.trim();
+  const description = document
+    .getElementById("episode_description")
+    .value.trim();
   const duration = document.getElementById("episode_duration").value;
   const videoUrl = document.getElementById("episode_videoUrl").value.trim();
 
@@ -493,13 +508,6 @@ function validateEpisodeForm() {
     return "Please enter a video URL.";
   }
 
-  // Validate URL format
-  try {
-    new URL(videoUrl);
-  } catch (e) {
-    return "Please enter a valid video URL.";
-  }
-
   return null; // No validation errors
 }
 
@@ -507,8 +515,12 @@ function validateEpisodeForm() {
 function collectEpisodeFormData() {
   const formData = {
     content: document.getElementById("episode_series").value,
-    seasonNumber: parseInt(document.getElementById("episode_seasonNumber").value),
-    episodeNumber: parseInt(document.getElementById("episode_episodeNumber").value),
+    seasonNumber: parseInt(
+      document.getElementById("episode_seasonNumber").value
+    ),
+    episodeNumber: parseInt(
+      document.getElementById("episode_episodeNumber").value
+    ),
     title: document.getElementById("episode_title").value.trim(),
     description: document.getElementById("episode_description").value.trim(),
     duration: parseInt(document.getElementById("episode_duration").value),
