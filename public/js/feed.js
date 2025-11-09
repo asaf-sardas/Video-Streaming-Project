@@ -405,11 +405,17 @@ async function displayHomeSections() {
     return;
   }
 
+  // Check if genres are already loaded to prevent duplicates
+  const genreSectionsContainer = document.getElementById("genreSections");
+  if (genreSectionsContainer && genreSectionsContainer.children.length > 0) {
+    console.log("Genres already loaded, skipping duplicate load...");
+    return;
+  }
+
   isLoadingHomeSections = true;
 
   try {
     // Clear genre sections container first to prevent duplicates
-    const genreSectionsContainer = document.getElementById("genreSections");
     if (genreSectionsContainer) {
       genreSectionsContainer.innerHTML = "";
     }
@@ -607,210 +613,6 @@ async function loadInitialData() {
   }
 }
 
-// Original code continues below
-// TV Shows list
-const tvShows = [
-  {
-    id: 1,
-    title: "Stranger Things",
-    year: 2016,
-    genre: "Sci-Fi & Fantasy",
-    likes: 1500,
-    type: "tv",
-  },
-  {
-    id: 2,
-    title: "Breaking Bad",
-    year: 2008,
-    genre: "Crime Drama",
-    likes: 2000,
-    type: "tv",
-  },
-  {
-    id: 3,
-    title: "The Crown",
-    year: 2016,
-    genre: "Historical Drama",
-    likes: 1200,
-    type: "tv",
-  },
-  {
-    id: 4,
-    title: "Dark",
-    year: 2017,
-    genre: "Sci-Fi Mystery",
-    likes: 1400,
-    type: "tv",
-  },
-  {
-    id: 5,
-    title: "Black Mirror",
-    year: 2011,
-    genre: "Sci-Fi Anthology",
-    likes: 1300,
-    type: "tv",
-  },
-  {
-    id: 6,
-    title: "The Last of Us",
-    year: 2023,
-    genre: "Drama",
-    likes: 2200,
-    type: "tv",
-  },
-  {
-    id: 7,
-    title: "House of the Dragon",
-    year: 2022,
-    genre: "Fantasy",
-    likes: 2100,
-    type: "tv",
-  },
-  {
-    id: 8,
-    title: "Better Call Saul",
-    year: 2015,
-    genre: "Crime Drama",
-    likes: 1900,
-    type: "tv",
-  },
-  {
-    id: 9,
-    title: "The Mandalorian",
-    year: 2019,
-    genre: "Sci-Fi Western",
-    likes: 2300,
-    type: "tv",
-  },
-  {
-    id: 10,
-    title: "Succession",
-    year: 2018,
-    genre: "Drama",
-    likes: 1800,
-    type: "tv",
-  },
-  {
-    id: 11,
-    title: "The Boys",
-    year: 2019,
-    genre: "Action",
-    likes: 2000,
-    type: "tv",
-  },
-  {
-    id: 12,
-    title: "Ted Lasso",
-    year: 2020,
-    genre: "Comedy",
-    likes: 1700,
-    type: "tv",
-  },
-];
-
-// Movies list
-const movies = [
-  {
-    id: 13,
-    title: "Inception",
-    year: 2010,
-    genre: "Sci-Fi",
-    likes: 2500,
-    type: "movie",
-  },
-  {
-    id: 14,
-    title: "The Dark Knight",
-    year: 2008,
-    genre: "Action",
-    likes: 2800,
-    type: "movie",
-  },
-  {
-    id: 15,
-    title: "Interstellar",
-    year: 2014,
-    genre: "Sci-Fi",
-    likes: 2400,
-    type: "movie",
-  },
-  {
-    id: 16,
-    title: "Oppenheimer",
-    year: 2023,
-    genre: "Drama",
-    likes: 2600,
-    type: "movie",
-  },
-  {
-    id: 17,
-    title: "Barbie",
-    year: 2023,
-    genre: "Comedy",
-    likes: 2300,
-    type: "movie",
-  },
-  {
-    id: 18,
-    title: "Avatar: The Way of Water",
-    year: 2022,
-    genre: "Sci-Fi",
-    likes: 2700,
-    type: "movie",
-  },
-  {
-    id: 19,
-    title: "Top Gun: Maverick",
-    year: 2022,
-    genre: "Action",
-    likes: 2200,
-    type: "movie",
-  },
-  {
-    id: 20,
-    title: "Everything Everywhere All at Once",
-    year: 2022,
-    genre: "Action",
-    likes: 2400,
-    type: "movie",
-  },
-  {
-    id: 21,
-    title: "The Batman",
-    year: 2022,
-    genre: "Action",
-    likes: 2100,
-    type: "movie",
-  },
-  {
-    id: 22,
-    title: "Dune",
-    year: 2021,
-    genre: "Sci-Fi",
-    likes: 2300,
-    type: "movie",
-  },
-  {
-    id: 23,
-    title: "Spider-Man: Across the Spider-Verse",
-    year: 2023,
-    genre: "Animation",
-    likes: 2500,
-    type: "movie",
-  },
-  {
-    id: 24,
-    title: "The Super Mario Bros. Movie",
-    year: 2023,
-    genre: "Animation",
-    likes: 2000,
-    type: "movie",
-  },
-];
-
-// Combined list for home view
-const contentData = [...tvShows, ...movies];
-
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("Feed page loaded");
 
@@ -861,8 +663,18 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Set global searchInput reference (defined at top of file)
   searchInput = document.getElementById("searchInput");
 
+  // Flag to prevent multiple simultaneous search operations
+  let isSearching = false;
+
   // Function to perform search (defined here so it's accessible from both icon click and Enter key)
   const performSearch = () => {
+    // Prevent multiple simultaneous searches
+    if (isSearching) {
+      console.log("Search already in progress, skipping...");
+      return;
+    }
+
+    isSearching = true;
     const searchTerm = searchInput.value.trim();
     console.log("Performing search for:", searchTerm);
 
@@ -870,24 +682,19 @@ document.addEventListener("DOMContentLoaded", async function () {
     // This ensures that if user searches, home sections won't interfere
     isLoadingHomeSections = false;
 
-    // Hide sort select when performing search (if there's a search term)
-    const sortSelect = document.getElementById("sortSelect");
-    if (sortSelect) {
-      if (searchTerm) {
-        sortSelect.style.display = "none";
-      } else {
-        sortSelect.style.display = "block";
-      }
-    }
-
     if (!searchTerm) {
       console.log("No search term, showing all content");
+      isSearching = false;
+      return;
     }
 
     const activeCategory = document
       .querySelector(".nav-link.active")
       .getAttribute("data-category");
-    displayContent(activeCategory);
+
+    displayContent(activeCategory).finally(() => {
+      isSearching = false;
+    });
   };
 
   // Toggle search input visibility and perform search if input is visible
@@ -896,15 +703,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     const isVisible = searchInputContainer.style.display === "block";
 
     if (isVisible) {
-      // If input is visible, perform search
-      performSearch();
+      // If input is visible, perform search (only if not already searching)
+      if (!isSearching) {
+        performSearch();
+      }
     } else {
       // If input is hidden, show it
       searchInputContainer.style.display = "block";
       searchInput.focus();
-      // Hide sort select when search is active
-      const sortSelect = document.getElementById("sortSelect");
-      if (sortSelect) sortSelect.style.display = "none";
     }
   });
 
@@ -912,7 +718,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   searchInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      performSearch();
+      if (!isSearching) {
+        performSearch();
+      }
     }
   });
 
@@ -923,9 +731,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       !searchIcon.contains(e.target)
     ) {
       searchInputContainer.style.display = "none";
-      // Show sort select when search is closed
-      const sortSelect = document.getElementById("sortSelect");
-      if (sortSelect) sortSelect.style.display = "block";
     }
   });
 
@@ -949,12 +754,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // If there's a search term, show search results instead of home sections
         if (searchTerm) {
-          // Stop any ongoing home sections loading
+          // Stop any ongoing home sections loading to prevent genres from rendering
           isLoadingHomeSections = false;
-
-          // Hide sort select when search is active
-          const sortSelect = document.getElementById("sortSelect");
-          if (sortSelect) sortSelect.style.display = "none";
 
           // Hide home sections (popular, new releases, genres) and their titles
           const popularSection = document
@@ -972,8 +773,11 @@ document.addEventListener("DOMContentLoaded", async function () {
           if (newReleasesSection) newReleasesSection.style.display = "none";
           if (popularRow) popularRow.style.display = "none";
           if (newReleasesRow) newReleasesRow.style.display = "none";
-          if (genreSectionsContainer)
+          if (genreSectionsContainer) {
             genreSectionsContainer.style.display = "none";
+            // Clear genres container to prevent duplicates when search is cleared
+            genreSectionsContainer.innerHTML = "";
+          }
 
           // Create search results section with horizontal scroll (like Netflix)
           let searchSection = container.querySelector(
@@ -996,8 +800,8 @@ document.addEventListener("DOMContentLoaded", async function () {
           searchResultsRow.innerHTML = `<div class="loading">Searching for "${searchTerm}"...</div>`;
 
           try {
-            const sortType = sortSelect.value;
-            const contentToShow = await fetchAllContent(searchTerm, sortType);
+            // Remove sort parameter - no sorting in search
+            const contentToShow = await fetchAllContent(searchTerm, "");
 
             if (contentToShow.length === 0) {
               searchResultsRow.innerHTML = `
@@ -1025,13 +829,6 @@ document.addEventListener("DOMContentLoaded", async function () {
           }
         } else {
           // No search term - show regular home sections
-          // Reset the flag first to allow home sections to load
-          isLoadingHomeSections = false;
-
-          // Show sort select when no search term
-          const sortSelect = document.getElementById("sortSelect");
-          if (sortSelect) sortSelect.style.display = "block";
-
           // Hide search results section
           const searchSection = container.querySelector(
             ".search-results-section"
@@ -1059,6 +856,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             genreSectionsContainer.style.display = "block";
           if (grid) grid.style.display = "none";
 
+          // Load home sections (displayHomeSections will check for duplicates internally)
           await displayHomeSections();
         }
         return;
@@ -1075,7 +873,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         let contentToShow = [];
         // Get search term from input (trim whitespace, but keep original case for better matching)
         const searchTerm = searchInput ? searchInput.value.trim() : "";
-        const sortType = sortSelect.value;
+        // No sorting in feed page - removed sort functionality
 
         console.log(
           "Displaying content for category:",
@@ -1085,9 +883,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
 
         if (category === "tvshows") {
-          contentToShow = await fetchTVShows(searchTerm, sortType);
+          contentToShow = await fetchTVShows(searchTerm, "");
         } else if (category === "movies") {
-          contentToShow = await fetchMovies(searchTerm, sortType);
+          contentToShow = await fetchMovies(searchTerm, "");
         } else if (category === "popular" || category === "newandpopular") {
           // שם הקטגוריה שונה בין הממשק למשתמש לבין הקוד
           contentToShow = await fetchPopularContent();
@@ -1095,7 +893,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           // Fetch liked content for My List
           contentToShow = await fetchLikedContent();
         } else {
-          contentToShow = await fetchAllContent(searchTerm, sortType);
+          contentToShow = await fetchAllContent(searchTerm, "");
         }
 
         // Clear the loading message
@@ -1305,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const contentGrid = document.getElementById("contentGrid");
   // searchInput is already defined above in the search icon functionality section
-  const sortSelect = document.getElementById("sortSelect");
+  // sortSelect removed - no sorting functionality in feed page
 
   // Load liked content from database
   likedContent = await loadLikedContentFromDB();
@@ -1316,16 +1114,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Show home content initially
   displayContent("home");
 
-  // Event listeners for search and sort
+  // Event listeners for search
   // Real-time search removed - search only happens on Enter key or icon click
   // (Event listeners are defined above in the search icon functionality section)
-
-  sortSelect.addEventListener("change", () => {
-    const activeCategory = document
-      .querySelector(".nav-link.active")
-      .getAttribute("data-category");
-    displayContent(activeCategory);
-  });
 });
 
 const dropdownToggle = document.querySelector(".dropdown-icon");
