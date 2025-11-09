@@ -31,7 +31,16 @@ exports.login = async (req, res) => {
       await user.save();
     }
 
-    // No sessions for now; return safe user info the FE can store
+    // Persist session
+    req.session.user = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarUrl: user.avatarUrl || "",
+      profiles: formatProfiles(user.profiles),
+    };
+
     res.json({
       success: true,
       data: {
@@ -87,6 +96,26 @@ exports.register = async (req, res) => {
     }
     res.status(400).json({ success: false, error: err.message });
   }
+};
+
+exports.logout = (req, res) => {
+  if (!req.session) {
+    return res.status(200).json({ success: true });
+  }
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: "Failed to logout" });
+    }
+    res.clearCookie("vsid");
+    return res.status(200).json({ success: true });
+  });
+};
+
+exports.me = (req, res) => {
+  if (req.session && req.session.user) {
+    return res.json({ success: true, data: req.session.user });
+  }
+  return res.status(401).json({ success: false, error: "Not authenticated" });
 };
 
 

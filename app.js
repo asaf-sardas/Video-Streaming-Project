@@ -4,6 +4,8 @@ const morgan = require("morgan");
 const mongoose = require("mongoose");
 const path = require("path");
 require("dotenv").config();
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
 
 const app = express();
 
@@ -15,6 +17,35 @@ app.set("views", path.join(__dirname, "views"));
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
+
+// Sessions (using MongoDB store)
+app.use(
+  session({
+    name: "vsid",
+    secret: process.env.SESSION_SECRET || "dev-session-secret",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.DB_URL,
+      collectionName: "sessions",
+      stringify: false,
+    }),
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false, // set true behind HTTPS/proxy
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    },
+  })
+);
+
+// Expose authenticated user to requests and views
+app.use((req, res, next) => {
+  const user = req.session && req.session.user ? req.session.user : null;
+  req.user = user;
+  res.locals.user = user;
+  next();
+});
 
 // Serve static files from public directory
 app.use(express.static("public"));
