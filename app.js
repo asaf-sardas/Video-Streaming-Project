@@ -46,6 +46,8 @@ app.use("/register", require("./routes/views/register"));
 app.use("/genre", require("./routes/views/genre"));
 app.use("/content", require("./routes/views/content"));
 app.use("/add-content", require("./routes/views/add-content"));
+app.use("/settings", require("./routes/views/settings"));
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({
