@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupTypeChangeHandlers();
   setupResetButton();
   setupContentTypeToggle();
+  // Initialize form state - remove required from episode fields on page load
+  initializeFormState();
 });
 
 // Load Genres
@@ -255,6 +257,22 @@ function toggleDurationField(formType, type) {
   } else {
     durationGroup.style.display = "block";
   }
+}
+
+// Initialize form state on page load
+function initializeFormState() {
+  // Ensure episode fields don't have required attribute when page loads
+  // (since content form is shown by default)
+  const episodeFields = document.querySelectorAll(
+    "#episodeFormSection [required]"
+  );
+  episodeFields.forEach((field) => field.removeAttribute("required"));
+
+  // Ensure content fields are required (they should be, but just to be safe)
+  const contentFields = document.querySelectorAll(
+    "#contentFormSections [required]"
+  );
+  contentFields.forEach((field) => field.setAttribute("required", "required"));
 }
 
 // Content Type Toggle (Series vs Episode)
