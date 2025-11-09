@@ -4,7 +4,7 @@ const { isAuthenticated, isAdmin } = require("../../middleware/authMiddleware");
 const Genre = require("../../models/genre");
 
 // GET - Admin Content Management Page
-router.get("/", async (req, res) => {
+router.get("/", isAuthenticated, isAdmin, async (req, res) => {
   try {
     // Fetch all active genres for the dropdown
     const genres = await Genre.find({ isActive: true }).sort("name");
