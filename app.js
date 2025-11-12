@@ -3,6 +3,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const path = require("path");
+const logger = require("./utils/logger");
 require("dotenv").config();
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
@@ -47,15 +48,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Persist HTTP request logs to DB (non-blocking)
+app.use(require("./middleware/httpRequestLogger"));
+
 // Serve static files from public directory
 app.use(express.static("public"));
 
 // Database connection
 mongoose
-
   .connect(process.env.DB_URL)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => {
+    console.log("MongoDB connected");
+    logger.logInfo("MongoDB connected", "database");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    logger.logError("MongoDB connection error", "database", {
+      error: err?.message,
+    });
+  });
 
 // Import API routes
 app.use("/api/content", require("./routes/api/contentRoutes"));
@@ -81,6 +92,12 @@ app.use("/settings", require("./routes/views/settings"));
 
 // 404 Handler
 app.use((req, res) => {
+  // Log as warning but do not interrupt flow
+  logger.logWarning("Route not found", "router", {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+  });
   res.status(404).json({
     success: false,
     statusCode: 404,
@@ -97,6 +114,26 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  logger.logInfo("Server started", "server", {
+    port: PORT,
+    env: process.env.NODE_ENV || "development",
+  });
+});
+
+// Process-level safety nets (best-effort logging, non-fatal for app flow)
+process.on("unhandledRejection", (reason) => {
+  logger.logError("Unhandled Promise rejection", "process", {
+    reason:
+      (reason && reason.message) ||
+      (typeof reason === "string" ? reason : "unknown"),
+  });
+});
+
+process.on("uncaughtException", (err) => {
+  logger.logError("Uncaught Exception", "process", {
+    message: err?.message,
+    stack: err?.stack,
+  });
 });
 
 module.exports = app;
