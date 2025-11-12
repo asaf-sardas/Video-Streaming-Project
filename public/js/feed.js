@@ -55,7 +55,8 @@ async function fetchTVShows(searchTerm = "", sortBy = "") {
     if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
     if (sortBy === "name") url += "sort=title:1&";
     else if (sortBy === "name-desc") url += "sort=title:-1&";
-  url += "limit=1000";
+    url += "limit=1000";
+    
     const response = await fetch(url);
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
