@@ -31,7 +31,8 @@ async function fetchAllContent(searchTerm = "", sortBy = "") {
     if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
     if (sortBy === "name") url += "sort=title:1&";
     else if (sortBy === "name-desc") url += "sort=title:-1&";
-
+    url += "limit=1000";
+      
     console.log("Fetching from URL:", url); // דיבוג
 
     const response = await fetch(url);
@@ -54,7 +55,7 @@ async function fetchTVShows(searchTerm = "", sortBy = "") {
     if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
     if (sortBy === "name") url += "sort=title:1&";
     else if (sortBy === "name-desc") url += "sort=title:-1&";
-
+  url += "limit=1000";
     const response = await fetch(url);
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
@@ -71,6 +72,7 @@ async function fetchMovies(searchTerm = "", sortBy = "") {
     if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
     if (sortBy === "name") url += "sort=title:1&";
     else if (sortBy === "name-desc") url += "sort=title:-1&";
+    url += "limit=1000";
 
     const response = await fetch(url);
     if (!response.ok) throw new Error("Network response was not ok");
