@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 const errorHandler = (err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] Error:`, {
     message: err.message,
@@ -37,6 +39,24 @@ const errorHandler = (err, req, res, next) => {
         statusCode = 500; // Internal Server Error
     }
   }
+
+  // Best-effort DB logging (non-blocking)
+  logger
+    .logError(err.message || "Unhandled error", "errorHandler", {
+      url: req.url,
+      method: req.method,
+      statusCode,
+      errorName: err.name,
+      errorCode: err.code,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      body: req.body,
+      params: req.params,
+      query: req.query,
+      userId: req?.user?._id || req?.user?.id || null,
+    })
+    .catch(() => {
+      // intentionally ignored
+    });
 
   res.status(statusCode).json({
     success: false,
