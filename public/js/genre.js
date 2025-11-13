@@ -810,10 +810,18 @@ function setupDropdown() {
           break;
         case "logout":
         case "Logout":
-          localStorage.removeItem("isLoggedIn");
-          localStorage.removeItem("currentProfile");
-          localStorage.removeItem("currentUser");
-          window.location.href = "/login";
+          (async () => {
+            try {
+              await fetch("/api/auth/logout", { method: "POST" });
+            } catch (_) {
+              // ignore network error; proceed to clear client state
+            } finally {
+              localStorage.removeItem("isLoggedIn");
+              localStorage.removeItem("currentProfile");
+              localStorage.removeItem("currentUser");
+              window.location.href = "/login";
+            }
+          })();
           break;
       }
     });
