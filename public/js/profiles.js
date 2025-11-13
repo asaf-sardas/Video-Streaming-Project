@@ -68,10 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
       renderProfiles();
     });
 
-    logoutBtn?.addEventListener('click', (event) => {
+    logoutBtn?.addEventListener('click', async (event) => {
       event.preventDefault();
-      localStorage.clear();
-      window.location.href = '/login';
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (_) {
+        // ignore network error; proceed to clear client state
+      } finally {
+        localStorage.clear();
+        window.location.href = '/login';
+      }
     });
 
     saveProfileBtn?.addEventListener('click', handleModalSubmit);
