@@ -39,6 +39,16 @@ cd Video-Streaming-Project
 npm install
 ```
 
+### Media Setup (Important)
+
+To keep the repository light, actual video and image files are **not included**.
+Before running the app or the seed script, please:
+
+1.  Add your movie posters to: `public/posters/`
+2.  Add your video files (.mp4) to: `public/videos/`
+
+_(Note: If you run `npm run seed`, ensure the filenames in the folders match the seed data, or add content manually via the Admin Panel)._
+
 ### Environment Variables
 
 Use the provided sample file as reference:
@@ -47,6 +57,7 @@ Use the provided sample file as reference:
 - Fill in your real values
 
 Key variables:
+
 - `DB_URL` — Mongo connection string (required)
 - `SESSION_SECRET` — long random string for session signing (required)
 - `PORT` — server port (default 3000)
@@ -76,7 +87,8 @@ npm run seed
 ```
 
 Seeded users include:
-- Admins: `amit@gmail.com`, `asaf@gmail.com`, `reut@gmail.com`, `edith@gmail.com` 
+
+- Admins: `amit@gmail.com`, `asaf@gmail.com`, `reut@gmail.com`, `edith@gmail.com`
 - User: `daniel@gmail.com`
 
 ## Project Structure
@@ -207,6 +219,7 @@ View route handlers live under `routes/views/*` and templates under `views/*`.
 ## Static Assets
 
 Static files are served from `public/`:
+
 - Posters: `public/posters`
 - Videos: `public/videos`
 - Styles/JS: `public/css`, `public/js`
